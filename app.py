@@ -4,7 +4,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return 'Hello, World! This is a simple HTTP-based web service '
+    return "Hello, Flask is running on a local server!"
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=3099, debug=True)
