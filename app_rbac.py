@@ -6,9 +6,9 @@ app = Flask(__name__)
 # Simulated user database keyed by access token
 # In a real scenario, this info would be retrieved from an identity provider.
 USERS = {
-    "token-user": {"username": "alice", "roles": ["user"]},
-    "token-admin": {"username": "bob", "roles": ["admin"]},
-    "token-both": {"username": "charlie", "roles": ["user", "admin"]},
+    "token-user": {"username": "personA", "roles": ["user"]},
+    "token-admin": {"username": "tirth", "roles": ["admin"]},
+    "token-both": {"username": "personB", "roles": ["user", "admin"]},
 }
 
 # RBAC decorator that checks if the user's roles include at least one of the allowed roles.
