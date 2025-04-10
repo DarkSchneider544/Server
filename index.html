@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Song Recommendation</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to right, #fdfbfb, #ebedee);
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 60px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            font-size: 2rem;
+            color: #4a90e2;
+        }
+
+        label {
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        select, button {
+            padding: 12px;
+            margin: 15px;
+            width: 80%;
+            max-width: 300px;
+            font-size: 1rem;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+
+        select:focus, button:focus {
+            outline: none;
+            border-color: #4a90e2;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+        }
+
+        button {
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #357ab7;
+        }
+
+        #result {
+            margin-top: 30px;
+        }
+
+        .song-card {
+            background: #f9f9f9;
+            margin: 10px auto;
+            padding: 15px;
+            border-radius: 8px;
+            width: 80%;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: transform 0.2s ease, border 0.2s ease;
+            text-decoration: none;
+        }
+
+        .song-card:hover {
+            transform: scale(1.03);
+            border: 2px solid #1DB954;
+            background: #f0fff5;
+        }
+
+        .song-title {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #2c3e50;
+        }
+
+        .song-artist {
+            color: #7f8c8d;
+            font-size: 0.95rem;
+        }
+
+        a {
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>🎶 Song Recommendation System</h2>
+        <label for="genre">Choose a genre:</label>
+        <br>
+        <select id="genre"></select>
+        <br>
+        <button onclick="getSongs()">Get Recommendations</button>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        async function getApiKey() {
+            const response = await fetch('http://localhost:8080/binding.txt');
+            return response.text();
+        }
+
+        async function populateGenres() {
+            try {
+                const response = await fetch('http://localhost:8080/genres');
+                const data = await response.json();
+                const select = document.getElementById("genre");
+                data.genres.forEach(g => {
+                    const option = document.createElement("option");
+                    option.value = g;
+                    option.text = g.charAt(0).toUpperCase() + g.slice(1);
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error("Could not load genres:", error);
+                document.getElementById("result").innerHTML = `<p style="color:red;">Error loading genres</p>`;
+            }
+        }
+
+        async function getSongs() {
+            const genre = document.getElementById("genre").value;
+            const apiKey = await getApiKey();
+
+            const resultDiv = document.getElementById("result");
+            resultDiv.innerHTML = "<p>Loading recommendations...</p>";
+
+            fetch(`http://localhost:8080/recommend?genre=${genre}`, {
+                headers: { "x-api-key": apiKey.trim() }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    resultDiv.innerHTML = `<p style="color:red;">${data.error}</p>`;
+                } else if (data.recommendations.length === 0) {
+                    resultDiv.innerHTML = `<p>No songs found for <strong>${genre}</strong>.</p>`;
+                } else {
+                    resultDiv.innerHTML = "<h3>Recommended Songs:</h3>" +
+                        data.recommendations.map(s => `
+                            <a href="${s.url}" target="_blank">
+                                <div class="song-card">
+                                    <div class="song-title">${s.title}</div>
+                                    <div class="song-artist">by ${s.artist}</div>
+                                </div>
+                            </a>
+                        `).join('');
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                resultDiv.innerHTML = `<p style="color:red;">Failed to fetch recommendations</p>`;
+            });
+        }
+
+        window.onload = populateGenres;
+    </script>
+
+</body>
+</html>
